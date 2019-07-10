@@ -2,7 +2,7 @@
  |  tail.select - The vanilla solution to make your HTML select fields AWESOME!
  |  @file       ./js/tail.select-full.js
  |  @author     SamBrishes <sam@pytes.net>
- |  @version    0.5.14 - Beta
+ |  @version    0.5.15 - Beta
  |
  |  @website    https://github.com/pytesNET/tail.select
  |  @license    X11 / MIT License
@@ -119,7 +119,7 @@
         select.inst["tail-" + this.id] = this;
         return this.init().bind();
     }, options;
-    select.version = "0.5.14";
+    select.version = "0.5.15";
     select.status = "beta";
     select.count = 0;
     select.inst = {};
@@ -158,7 +158,7 @@
         openAbove: null,            // [0.3.0]      Boolean, null
         placeholder: null,          // [0.2.0]      String, null
         search: false,              // [0.3.0]      Boolean
-        searcgConfig: [             // [0.5.13]     Array
+        searchConfig: [             // [0.5.13]     Array
             "text", "value"
         ],
         searchFocus: true,          // [0.3.0]      Boolean

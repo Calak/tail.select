@@ -411,6 +411,12 @@
     margin-top: -2px;
     opacity: 0;
 }
+.tail-select .select-dropdown ul[data-group="#"] li:first-of-type{
+    margin-top: 0;
+}
+.tail-select .select-dropdown ul:last-of-type li:last-of-type{
+    margin-bottom: 0;
+}
 .tail-select .select-dropdown ul:hover li button{
     opacity: 1;
 }

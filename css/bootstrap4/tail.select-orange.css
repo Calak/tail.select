@@ -3,7 +3,11 @@
  |  tail.select - The vanilla solution to make your HTML select fields AWESOME!
  |  @file       ./css/bootstrap4/tail.select-orange.css
  |  @author     SamBrishes <sam@pytes.net>
+<<<<<<< HEAD
  |  @version    0.5.15 - Beta
+=======
+ |  @version    0.5.16 - Beta
+>>>>>>> 7dfed2ab2c2e7b5a7eba6e18d8eb19fb50dbf2b8
  |
  |  @website    https://github.com/pytesNET/tail.select
  |  @license    X11 / MIT License
@@ -176,8 +180,7 @@
     background-color: #fD7E14;
     background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20viewBox%3D'0%200%204%205'%3E%3Cpath%20fill%3D'white'%20d%3D'M2%200L0%202h4zm0%205L0%203h4z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position-x: right 0.75rem;
-    background-position-y: center;
+    background-position: center right 0.75rem;
     background-size: 8px 10px;
     border-width: 1px;
     border-style: solid;

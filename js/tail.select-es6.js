@@ -2,7 +2,11 @@
  |  tail.select - The vanilla solution to make your HTML select fields AWESOME!
  |  @file       ./js/tail.select-es6.js
  |  @author     SamBrishes <sam@pytes.net>
+<<<<<<< HEAD
  |  @version    0.5.15 - Beta
+=======
+ |  @version    0.5.16 - Beta
+>>>>>>> 7dfed2ab2c2e7b5a7eba6e18d8eb19fb50dbf2b8
  |
  |  @website    https://github.com/pytesNET/tail.select
  |  @license    X11 / MIT License
@@ -33,10 +37,10 @@ var {select, options} = (function(root){
 
     /*
      |  SELECT CONSTRUCTOR
-     |  @since  0.5.12 [0.3.0]
+     |  @since  0.5.16 [0.3.0]
      */
     const select = function(el, config){
-        el = (typeof(el) == "string")? d[queA](el): el;
+        el = (typeof el === "string")? d[queA](el): el;
         if(el instanceof NodeList || el instanceof HTMLCollection || el instanceof Array){
             let _r = Array.prototype.map.call(el, item => {
                 return new select(item, Object.assign({}, config));
@@ -59,7 +63,7 @@ var {select, options} = (function(root){
         // Get Element Options
         let placeholder = el[gAttr]("placeholder") || el[gAttr]("data-placeholder"),
             fb1 = "bindSourceSelect", fb2 = "sourceHide"; // Fallbacks
-        config = (typeof(config) == "object")? config: {};
+        config = (config instanceof Object)? config: {};
         config.multiple = ("multiple" in config)? config.multiple: el.multiple;
         config.disabled = ("disabled" in config)? config.disabled: el.disabled;
         config.placeholder = placeholder || config.placeholder || null;
@@ -76,7 +80,11 @@ var {select, options} = (function(root){
         select.inst["tail-" + this.id] = this;
         return this.init().bind();
     };
+<<<<<<< HEAD
     select.version = "0.5.15";
+=======
+    select.version = "0.5.16";
+>>>>>>> 7dfed2ab2c2e7b5a7eba6e18d8eb19fb50dbf2b8
     select.status = "experimental";
     select.count = 0;
     select.inst = {};
@@ -282,12 +290,12 @@ var {select, options} = (function(root){
                     this.modify(locale, key, id[key]);
                 }
             } else {
-                this[locale][id] = (typeof(string) == "string")? string: this[locale][id];
+                this[locale][id] = (typeof string === "string")? string: this[locale][id];
             }
             return true;
         },
         register(locale, object){
-            if(typeof(locale) != "string" || !(object instanceof Object)){
+            if(typeof locale !== "string" || !(object instanceof Object)){
                 return false;
             }
             this[locale] = object;
@@ -309,10 +317,10 @@ var {select, options} = (function(root){
             }
 
             string = this.__[string];
-            if(typeof(string) === "function"){
+            if(typeof string === "function"){
                 string = string.call(this, replace);
             }
-            if(typeof(replace) === "object"){
+            if(typeof replace === "object"){
                 for(let key in replace){
                     string = string.replace(key, replace[key]);
                 }
@@ -625,7 +633,7 @@ var {select, options} = (function(root){
 
         /*
          |  API :: QUERY OPTIONS
-         |  @since  0.5.13 [0.5.0]
+         |  @since  0.5.15 [0.5.0]
          */
         query(search, conf){
             let tp, ul, a1, a2;                             // Pre-Definition
@@ -635,8 +643,11 @@ var {select, options} = (function(root){
                 args = (!search)?[con.sortItems, con.sortGroups]: [search, conf];
 
             // Option Walker
-            this._query = (typeof(search) == "string")? search: false;
+            this._query = (typeof search == "string")? search: false;
             for(let item of this.options[func].apply(this.options, args)){
+                if(item === false){
+                    continue;
+                }
                 if(!ul || (ul && ul[gAttr]("data-group") !== item.group)){
                     tp = (con.cbLoopGroup || this.cbGroup).call(this, item.group, search, root);
                     if(tp instanceof Element){
@@ -770,7 +781,7 @@ var {select, options} = (function(root){
                 return this;
             }
             let c = this.con, len = this.options.selected.length, limit;
-            if(typeof(label) != "string"){
+            if(typeof label !== "string"){
                 if(c.disabled){
                     label = "disabled";
                 } else if(this.dropdown[queA]("*[data-key]").length == 0){
@@ -779,7 +790,7 @@ var {select, options} = (function(root){
                     label = "limit";
                 } else if(!c.multiple && this.options.selected.length > 0){
                     label = this.options.selected[0].innerText;
-                } else if(typeof(c.placeholder) == "string"){
+                } else if(typeof c.placeholder === "string"){
                     label = c.placeholder;
                 } else {
                     label = "placeholder" + (c.multiple && c.multiLimit < Infinity? "Multi": "");
@@ -995,25 +1006,25 @@ var {select, options} = (function(root){
 
         /*
          |  PUBLIC :: GET|SET CONFIG
-         |  @since  0.5.0 [0.4.0]
+         |  @since  0.5.15 [0.4.0]
          */
         config(key, value, rebuild){
             if(key instanceof Object){
                 for(let k in key){ this.config(k, key[k], false); }
                 return this.reload()? this.con: this.con;
             }
-            if(typeof(key) == "undefined"){
+            if(key === void 0){
                 return this.con;
             } else if(!(key in this.con)){
                 return false;
             }
 
             // Set | Return
-            if(typeof(value) == "undefined"){
+            if(value === void 0){
                 return this.con[key];
             }
             this.con[key] = value;
-            if(this.rebuild !== false){
+            if(rebuild !== false){
                 this.reload();
             }
             return this;
@@ -1040,7 +1051,7 @@ var {select, options} = (function(root){
          |  @param  array   An array with own arguments, which should pass to the callback too.
          */
         on(event, callback, args){
-            if(["open", "close", "change"].indexOf(event) < 0 || typeof(callback) != "function"){
+            if(["open", "close", "change"].indexOf(event) < 0 || typeof callback !== "function"){
                 return false;
             }
             if(!(event in this.events)){
@@ -1102,7 +1113,7 @@ var {select, options} = (function(root){
          |  @since  0.5.7 [0.3.0]
          */
         get(key, grp){
-            if(typeof(key) == "object" && key.key && key.group){
+            if(typeof key === "object" && key.key && key.group){
                 grp = key.group || grp;
                 key = key.key;
             } else if(key instanceof Element){
@@ -1113,7 +1124,7 @@ var {select, options} = (function(root){
                     grp = key[gAttr]("data-group") || key[parE][gAttr]("data-group") || "#";
                     key = key[gAttr]("data-key");
                 }
-            } else if(typeof(key) != "string"){
+            } else if(typeof key !== "string"){
                 return false;
             }
             key = (/^[0-9]+$/.test(key))? "_" + key: key;
@@ -1122,7 +1133,7 @@ var {select, options} = (function(root){
 
         /*
          |  SET AN EXISTING OPTION
-         |  @since  0.5.7 [0.3.0]
+         |  @since  0.5.15 [0.3.0]
          */
         set(opt, rebuild){
             let key = opt.value || opt.innerText, grp = opt[parE].label || "#";
@@ -1161,7 +1172,8 @@ var {select, options} = (function(root){
                 option: opt,
                 optgroup: (grp != "#")? this.groups[grp]: undefined,
                 selected: opt.selected,
-                disabled: opt.disabled
+                disabled: opt.disabled,
+                hidden: opt.hidden || false
             };
             this.length++;
             if(opt.selected){ this.select(this.items[grp][id]); }
@@ -1186,7 +1198,7 @@ var {select, options} = (function(root){
             }
 
             // Check Group
-            group = (typeof(group) == "string")? group: "#";
+            group = (typeof group === "string")? group: "#";
             if(group !== "#" && !(group in this.groups)){
                 let optgroup = create("OPTGROUP");
                 optgroup.label = group;
@@ -1354,10 +1366,10 @@ var {select, options} = (function(root){
 
         /*
          |  INVERT CURRENT <STATE>
-         |  @since  0.5.0 [0.3.0]
+         |  @since  0.5.15 [0.3.0]
          */
         invert(state){
-            state = this._replaceType(state);
+            state = this._r(state);
             if(["enable", "disable"].indexOf(state) >= 0){
                 let invert = this.disabled, action = (state == "enable")? "disable": "enable";
             } else if(["select", "unselect"].indexOf(state) >= 0){
@@ -1400,7 +1412,7 @@ var {select, options} = (function(root){
                     items.forEach((e) => { this.handle.apply(this, [state, value, null].concat(args)); });
                 } else {
                     for(let key in items){
-                        if(typeof(items[key]) != "string" && typeof(items[key]) != "number" && !(items[key] instanceof Element)){
+                        if(typeof items[key] !== "string" && typeof items[key] !== "number" && !(items[key] instanceof Element)){
                             continue;
                         }
                         this.handle.apply(this, [state, items[key], (key in this.items? key: null)]).concat(args);
@@ -1431,7 +1443,7 @@ var {select, options} = (function(root){
 
         /*
          |  FIND SOME OPTIONs - ARRAY EDITION
-         |  @since  0.5.13 [0.3.0]
+         |  @since  0.5.15 [0.3.0]
          */
         find(search, config){
             let self = this, matches, has = {};
@@ -1449,7 +1461,7 @@ var {select, options} = (function(root){
             // Config Handler
             else {
                 config = (config instanceof Array)? config: [config];
-                config.forEach(c => { if(typeof(c) === "string"){ has[c] = true; } });
+                config.forEach(c => { if(typeof c === "string"){ has[c] = true; } });
                 has.any = (!has.any)? has.attributes && has.value: has.any;
 
                 // Cleanup & Prepare
@@ -1483,7 +1495,9 @@ var {select, options} = (function(root){
             }
 
             // Hammer Time
-            return [...this.self.e.options].filter(matches).map(opt => self.get(opt));
+            return [...this.self.e.options].filter(matches).map(opt => {
+                return opt.hidden? false: this.get(opt)
+            });
         },
 
         /*
@@ -1499,7 +1513,7 @@ var {select, options} = (function(root){
 
         /*
          |  NEW OPTIONS WALKER
-         |  @since  0.5.7 [0.4.0]
+         |  @since  0.5.15 [0.4.0]
          */
         *walker(orderi, orderg){
             let groups = Object.keys(this.groups);
@@ -1507,7 +1521,7 @@ var {select, options} = (function(root){
                 groups.sort();
             } else if(orderg == "DESC"){
                 groups.sort().reverse();
-            } else if(typeof(orderg) == "function"){
+            } else if(typeof orderg === "function"){
                 groups = orderg.call(this, groups);
             }
             groups.unshift("#");
@@ -1523,11 +1537,14 @@ var {select, options} = (function(root){
                     keys.sort();
                 } else if(orderi == "DESC"){
                     keys.sort().reverse();
-                } else if(typeof(orderi) == "function"){
+                } else if(typeof orderi === "function"){
                     keys = orderi.call(this, keys);
                 }
 
                 for(let l = keys.length, i = 0; i < l; i++){
+                    if(this.items[grp][keys[i]].hidden === true){
+                        continue;
+                    }
                     yield this.items[grp][keys[i]];
                 }
             }

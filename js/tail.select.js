@@ -498,26 +498,17 @@
 
             // Recalculate the dropdown position when the page scroll
             var scrollTimeout = null;
-            window.addEventListener('scroll', function(){
-                if (!cHAS(self.select, 'active') || self.con.openAbove === false) return;
-
-                var fn = function() {
-                    scrollTimeout = null;
-                    self.calc();
-                }
-                this.clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(fn, 100);
-            });
-
-            window.addEventListener('resize', function(){
-                if (!cHAS(self.select, 'active') || self.con.openAbove === false) return;
-
-                var fn = function() {
-                    scrollTimeout = null;
-                    self.calc();
-                }
-                this.clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(fn, 100);
+            ['scroll', 'resize'].forEach(function(event) {
+                window.addEventListener(event, function(){
+                    if (!cHAS(self.select, 'active') || self.con.openAbove === false) return;
+    
+                    var fn = function() {
+                        scrollTimeout = null;
+                        self.calc();
+                    }
+                    this.clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(fn, 100);
+                });
             });
 
             // Bind Source Select

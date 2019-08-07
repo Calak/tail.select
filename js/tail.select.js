@@ -640,7 +640,8 @@
             height = (height > clone.clientHeight)? clone.clientHeight: height;
 
             if(this.con.search){
-                search = clone.querySelector(".dropdown-search").offsetHeight;
+                search = clone.querySelector(".dropdown-search").clientHeight;
+                // search = clone.querySelector(".dropdown-search").offsetHeight;
             }
             this.dropdown.parentElement.removeChild(clone);
             // Calculate Viewport

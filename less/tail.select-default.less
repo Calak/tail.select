@@ -1,3 +1,9 @@
+// TODO
+// .hover:hover
+// tail-select.focus == tail.select.active
+// .optgroup-title ---> font-weight: bold, check "optgroup-title b"
+// all/none order
+
 //
 //  tail.select - The vanilla solution to make your HTML select fields AWESOME!
 //  @file       ./less/tail.select-default.less
@@ -156,8 +162,11 @@
 
         .hover(){
             foreground: #scheme[foreground];
-            background: mix(#scheme[primary], darken(#scheme[background], 5%), 5%);
+            background: fadeout(desaturate(#scheme[primary], 10%), 87%);
         }
+        .hover-accent(){
+            background: fadeout(desaturate(#scheme[primary], 10%), 80%);
+        }        
         .active(){
             foreground: @primary;
             background: #scheme[background];
@@ -287,7 +296,7 @@
             border-color: #scheme.button.all[separators];
             background-color: #scheme.button.all[background];
 
-            &:hover{
+            &:hover, &:focus{
                 color: #scheme.button.all.hover[foreground];
                 border-color: #scheme.button.all.hover[separators];
                 background-color: #scheme.button.all.hover[background];
@@ -298,7 +307,7 @@
             border-color: #scheme.button.none[separators];
             background-color: #scheme.button.none[background];
         
-            &:hover{
+            &:hover, &:focus{
                 color: #scheme.button.none.hover[foreground];
                 border-color: #scheme.button.none.hover[separators];
                 background-color: #scheme.button.none.hover[background];
@@ -345,6 +354,7 @@
             background-color: #scheme.input.focus[background];
         }
     }
+
     &.disabled{
         input[type="text"]{
             color: #scheme.input.disabled[foreground];
@@ -450,7 +460,7 @@
     }
 }
 .tail-select{
-    &:hover, &.idle, &.active{
+    &:hover,  &:focus, &.idle, &.active{
         .select-label{
             z-index: 25;
             .shadow(#scheme.label.active[box-shadow]);
@@ -462,6 +472,9 @@
                 opacity: 1.0;
             }
         }
+    }
+    &:focus .select-label:after{
+        color: #scheme.label.hover[separators];
     }
 }
 .tail-select.active{
@@ -575,6 +588,12 @@
             }
         }
     }
+    ul[data-group="#"] li:first-of-type {
+        margin-top: 0;
+    }
+    ul:last-of-type li:last-of-type {
+        margin-bottom: 0;
+    }    
     ul:hover li button{
         opacity: 1;
     }
@@ -682,8 +701,14 @@
         transition: all 0.3s ease-in;
         &:hover, &.hover{
             transition: all 0.4s ease;            
+            color: #scheme.option.hover[foreground];
+        }
+        &.hover{          
             background-color: #scheme.option.hover[background];
         }
+        &:hover{          
+            background-color: #scheme.option.hover-accent[background];
+        }            
     }
 
     // Disabled
@@ -691,7 +716,6 @@
     .select-dropdown ul li.dropdown-option.disabled{
         cursor: not-allowed;
         color: #scheme.option.disabled[foreground];
-        text-shadow: 0px 1px 0px fade(lighten(#scheme.option.disabled[foreground],30%),10%), 0px -1px 0px fade(darken(#scheme.option.disabled[foreground],30%),10%);
         background-color: #scheme.option.disabled[background];
 
         &:before{

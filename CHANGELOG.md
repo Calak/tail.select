@@ -3,6 +3,17 @@ CHANGELOG
 
 Unreleased Changes
 ------------------
+(MINE)
+less: 
+- Removing gap at both top and bottom of dropdown (TO REVIEW, with/without group at first)
+- Accentuate color on mouse hover 
+- Style button on focus (default) (TO REVIEW)
+- tail-select:focus (default)
+- Only one .hover/:hover at time
+- removed text-shadow
+js: 
+
+(/MINE)
 -   Bugfix: IE doesn't recognize `Object.constructor()` as object (instead as function).
     - Thanks to [#92](https://github.com/pytesNET/tail.select/issues/92).
 

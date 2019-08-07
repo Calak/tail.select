@@ -268,10 +268,11 @@
             this.dropdown = create("DIV", "select-dropdown");
             this.search = create("DIV", "dropdown-search");
             this.csvInput = create("INPUT", "select-search");
-
+            //this.label.tabIndex = 0;
             // Build :: Select
-            if(this.e.getAttribute("tabindex") !== null){
-                this.select.setAttribute("tabindex", this.e.getAttribute("tabindex"));
+            var originalTabIndex = this.e.getAttribute("tabindex");
+            if(originalTabIndex !== null && originalTabIndex != -1){
+                this.select.setAttribute("tabindex", originalTabIndex);
             } else {
                 this.select.setAttribute("tabindex", 0);
             }
@@ -292,11 +293,15 @@
                 this.dropdown.style.maxHeight = parseInt(con.height, 10) + "px";
             }
             if(con.search){
-                this.search.innerHTML = '<input type="text" class="search-input" />';
-                this.search.children[0].placeholder = this._e("search");
-                this.search.children[0].addEventListener("input", function(event){
-                    self.query.call(self, (this.value.length > con.searchMinLength)? this.value: undefined);
+                this.search.input = create("INPUT", "search-input");
+                this.search.input.type = "text";
+                //TODO: if opened, tabindex 0
+                this.search.input.tabIndex = -1;
+                this.search.input.placeholder = this._e("search");
+                this.search.input.addEventListener("input", function(event){
+                    self.query.call(self, this.value.length < con.searchMinLength ? undefined : this.value);
                 });
+                this.search.appendChild(this.search.input);
                 this.dropdown.appendChild(this.search);
             }
             this.select.appendChild(this.dropdown);
@@ -369,80 +374,139 @@
             var self = this;
 
             // Keys Listener
-            d.addEventListener("keydown", function(event){
-                var key = (event.keyCode || event.which), opt, inner, e, temp, tmp;
-                var space = (key == 32 && self.select === document.activeElement);
-                if(!space && (!cHAS(self.select, "active") || [13, 27, 38, 40].indexOf(key) < 0)){
+            self.select.addEventListener("keydown", function(event){
+                var key = (event.keyCode || event.which), opt, target = document.activeElement || event.target;
+
+                // Keep default behaviour for SHIFT/CONTROL/TAB
+               if(key == 16 || key == 17 || key == 9) return;                
+
+                if(target === self.select){
+                    var fn = {
+                        13: self.toggle,
+                        32: self.toggle,
+                        38: self.close,
+                        40: self.open
+                    }[key];
+                   if(typeof fn == "function"){
+                        fn.call(self);
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return;
+                    }
+                }
+                if(cHAS(this.select, "active") || cHAS(this.select, "idle") || self.con.disabled){
                     return false;
                 }
-                event.preventDefault();
-                event.stopPropagation();
+                if(!self.con.search || !self.search.input.active){
+                    var setAdjacentPageOption = function(dir){
+                        var tmp = self.dropdown.querySelector('.dropdown-inner'), size = tmp.offsetHeight, offset = 0;
 
-                // Space
-                if(key === 32){
-                    return self.open(self.con.animate);
-                }
+                        while((tmp = tmp.previousElementSibling)) offset += tmp.offsetHeight;
+                        var top = function(elem){
+                            var t = elem.offsetTop - offset;
+                            while((elem = elem.offsetParent) != self.dropdown) t += elem.offsetTop;
+                            return t;
+                        };
 
-                // Enter || Escape
-                if(key == 13){
-                    if((opt = self.dropdown.querySelector(".dropdown-option.hover:not(.disabled)"))){
-                        self.options.select.call(self.options, opt);
-                    }
-                }
-                if(key == 27 || key == 13){
-                    return self.close(self.con.animate);
-                }
+                        var list = self.dropdown.querySelectorAll(".dropdown-option:not(.disabled)"),
+                            index = [].indexOf.call(list, self.activeOption),
+                            start = top(list[index]), gap, next = index + dir;
 
-                // Top || Down
-                if((opt = self.dropdown.querySelector(".dropdown-option.hover:not(.disabled)"))){
-                    cREM(opt, "hover"); e = [((key == 40)? "next": "previous") + "ElementSibling"];
-                    do {
-                        if((temp = opt[e]) !== null && opt.tagName == "LI"){
-                            opt = temp;
-                        } else if((temp = opt.parentElement[e]) !== null && temp.children.length > 0 && temp.tagName == "UL"){
-                            opt = temp.children[(key == 40)? 0: temp.children.length-1];
-                        } else {
-                            opt = false;
+                        if (dir < 0) size -= list[index].offsetHeight;
+
+                        while (list[next]) {
+                            gap = dir * (top(list[next]) - start);
+                            if (dir > 0) gap += list[next].offsetHeight;
+                            if (size <= gap) break;
+                            index = next;
+                            next += dir;
                         }
-                        if(opt && (!cHAS(opt, "dropdown-option") || cHAS(opt, "disabled"))){
-                            continue;
+                        self.setActiveOption(list[index], true);
+                    };
+                    var fn = {
+                        32: function(){
+                           if(target.tagName != 'BUTTON') self.options.toggle(self.activeOption);
+                        },
+                        35: function(){
+                            var list = self.dropdown.querySelectorAll(".dropdown-option:not(.disabled)");
+                            if(list && list.length){
+                                self.open();
+                                self.setActiveOption(list.item(list.length-1), true);
+                            }
+                        },
+                        36: function(){
+                            var item = self.dropdown.querySelector(".dropdown-option:not(.disabled)");
+                           if(item){
+                                self.open();
+                                self.setActiveOption(item, true);
+                            }
+                        },
+                        33: function(){setAdjacentPageOption(-1)},
+                        34: function(){setAdjacentPageOption(1)}
+                    }[key];
+                   if(typeof fn == "function"){
+                        fn.call(self);
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return;
+                    } else if(self.con.search) self.search.input.active = true;
+                }
+                var setAdjacentOption = function(dir){
+                    var list = self.dropdown.querySelectorAll(".dropdown-option:not(.disabled)"),
+                        index = [].indexOf.call(list, self.activeOption);
+                   if(index < 0 && dir < 0) index = 0;
+                    self.setActiveOption(list.item((index + dir + list.length) % list.length), true);
+                };
+                var fn = {
+                    13: function(){ 
+                        self.options.select(self.activeOption);
+                       if(self.con.stayOpen){
+                            self.close();
                         }
-                        break;
-                    } while(true);
+                    },
+                    27: self.close,
+                    38: function(){ setAdjacentOption(-1) },
+                    40: function(){ setAdjacentOption(1) },
+
+                }[key];
+                if(typeof fn == "function"){
+                   if(self.con.search) self.search.input.active = false;
+                    fn.call(self);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                } 
+
+                if(self.con.search && target != self.search.input){
+                    self.search.input.focus();
+                    //self.search.input.dispatchEvent(new KeyboardEvent(event));
                 }
-                if(!opt && key == 40){
-                    opt = self.dropdown.querySelector(".dropdown-option:not(.disabled)");
-                } else if(!opt && key == 38){
-                    tmp = self.dropdown.querySelectorAll(".dropdown-option:not(.disabled)");
-                    opt = tmp[tmp.length - 1];
-                }
-                if(opt && (inner = self.dropdown.querySelector(".dropdown-inner"))){
-                    var pos = (function(el){
-                        var _r = {top: el.offsetTop, height: el.offsetHeight};
-                        while((el = el.parentElement) != inner){
-                            _r.top += el.offsetTop;
-                        }
-                        return _r;
-                    })(opt);
-                    cADD(opt, "hover");
-                    inner.scrollTop = Math.max(0, pos.top - (pos.height * 2));
-                }
-                return true;
+            }, true);
+
+            this.dropdown.addEventListener("mouseover", function(e){
+               if(e.target.hasAttribute('data-key') && !cHAS(e.target, 'disabled')) self.setActiveOption(e.target);
             });
 
-            // Close
-            d.addEventListener("click", function(ev){
-                if(!cHAS(self.select, "active") || cHAS(self.select, "idle")){ return false; }
-                if(self.con.stayOpen === true){ return false; }
 
-                var targets = [self.e, self.select, self.container];
-                for(var l = targets.length, i = 0; i < l; i++){
-                    if(targets[i] && (targets[i].contains(ev.target) || targets[i] == ev.target)){
-                        return false;
-                    }
-                    if(!ev.target.parentElement){ return false; }
+            self.select.addEventListener('blur', function(e){
+                var target = e.relatedTarget || document.activeElement;
+                if(target !== self.select && !self.select.contains(target)){
+                    self.close(self.con.animate);
+                    // cREM(this.select, "focus");
                 }
-                return self.close.call(self, self.con.animate);
+            }, true);
+
+            // Recalculate the dropdown position when the page scroll
+            var scrollTimeout = null;
+            window.addEventListener('scroll', function(){
+                if (!cHAS(self.select, 'active') || self.con.openAbove === false) return;
+
+                var fn = function() {
+                    scrollTimeout = null;
+                    self.calc();
+                }
+                this.clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(fn, 100);
             });
 
             // Bind Source Select
@@ -470,8 +534,40 @@
                     self.options.walk.call(self.options, "select", s);
                 }
             });
+
             return true;
         },
+
+
+        setActiveOption: function(opt, scroll){
+            if(!opt || opt.disabled || opt == this.activeOption) return;
+            if(this.activeOption) cREM(this.activeOption, 'hover');
+             this.activeOption = opt;
+             cADD(this.activeOption, 'hover');
+ 
+            if(scroll){
+                 // compute the inner offset
+                 var self = this, inner = inner = this.dropdown.querySelector(".dropdown-inner"), el = inner, offset = 0;
+                 while((el = el.previousElementSibling)) offset += el.offsetHeight;
+                 // compute the offset from the begining of the scrollable area
+                 var pos = (function(el){
+                     //var _r = {top: -offset, height: el.offsetHeight};
+                     var _r = {top: el.offsetTop - offset, height: el.offsetHeight};
+                     while((el = el.offsetParent) != self.dropdown){
+                         _r.top += el.offsetTop;
+                     }
+                     return _r;
+                 })(opt);
+                 // if the scroll view is lower than the top of the element, adjust
+                if(inner.scrollTop > pos.top){
+                     inner.scrollTop = pos.top
+                 } else {
+                     // compute the size that exceeds the scroll view
+                     var s = (pos.top + pos.height - inner.scrollTop - inner.offsetHeight);
+                    if(s > 0) inner.scrollTop += s;
+                 }
+             }
+         },
 
         /*
          |  INTERNAL :: INTERNAL CALLBACK
@@ -526,32 +622,37 @@
          |  @since  0.5.4 [0.5.0]
          */
         calc: function(){
+            console.log('calc');
             var clone = this.dropdown.cloneNode(true), height = this.con.height, search = 0,
                 inner = this.dropdown.querySelector(".dropdown-inner");
 
             // Calculate Dropdown Height
             clone = this.dropdown.cloneNode(true);
             clone.style.cssText = "height:auto;min-height:auto;max-height:none;opacity:0;display:block;visibility:hidden;";
+            
             clone.style.maxHeight = this.con.height + "px";
             clone.className += " cloned";
             this.dropdown.parentElement.appendChild(clone);
+
+            console.log('height:' , clone.clientHeight);
+
+            //height = Math.min(height, clone.clientHeight);
             height = (height > clone.clientHeight)? clone.clientHeight: height;
+
             if(this.con.search){
-                search = clone.querySelector(".dropdown-search").clientHeight;
+                search = clone.querySelector(".dropdown-search").offsetHeight;
             }
             this.dropdown.parentElement.removeChild(clone);
-
             // Calculate Viewport
             var pos = this.select.getBoundingClientRect(),
-                bottom = w.innerHeight-(pos.top+pos.height),
-                view = ((height+search) > bottom)? pos.top > bottom: false;
-            if(this.con.openAbove === true || (this.con.openAbove !== false && view)){
-                view = true, height = Math.min((height), pos.top-10);
-                cADD(this.select, "open-top");
-            } else {
-                view = false, height = Math.min((height), bottom-10);
-                cREM(this.select, "open-top");
-            }
+                bottom = w.innerHeight - (pos.top + pos.height),
+                above = this.con.openAbove;
+            if (typeof above !== 'boolean') above = pos.top > bottom && bottom < height + search;
+            ((above)?cADD:cREM)(this.select, "open-top");
+
+            // if(above) cADD(this.select, "open-top");
+            // else cREM(this.select, "open-top");
+
             if(inner){
                 this.dropdown.style.maxHeight = height + "px";
                 inner.style.maxHeight = (height-search) + "px";
@@ -564,7 +665,7 @@
          |  @since  0.5.13 [0.5.0]
          */
         query: function(search, conf){
-            var item, tp, ul, li, a1, a2;                           // Pre-Definition
+            var item, tp, ul, li;                           // Pre-Definition
             var self = this, con = this.con, g = "getAttribute";    // Shorties
             var root = create("DIV", "dropdown-inner"),             // Contexts
                 func = (!search)? "walker": "finder",
@@ -602,44 +703,43 @@
             }
 
             // Empty
-            var count = root.querySelectorAll("*[data-key]").length;
-            if(count == 0){
+            var options = root.querySelectorAll("li.dropdown-option[data-key]");
+            if(options.length == 0){
                 (this.con.cbEmpty || function(element){
                     var li = create("SPAN", "dropdown-empty");
                     li.innerText = this._e("empty");
                     element.appendChild(li);
                 }).call(this, root, search);
-            }
+                        }// Select All
+            //TODO: or con.multiLimit <= count
+            else if(con.multiple && con.multiLimit == Infinity && con.multiSelectAll){
+                var createButton = function(classname, text, state){
+                    var btn = create("BUTTON", classname);
+                    btn.tabIndex = 0;
+                    btn.textContent = text;
+                    btn.addEventListener("click", function(event){
+                        event.preventDefault();
+                        var options = self.dropdown.querySelectorAll(".dropdown-inner .dropdown-option");
+                        self.options.walk(state, options);
+                    });
 
-            // Select All
-            if(count > 0 && con.multiple && con.multiLimit == Infinity && con.multiSelectAll){
-                a1 = create("BUTTON", "tail-all"), a2 = create("BUTTON", "tail-none");
-                a1.innerText = this._e("all");
-                a1.addEventListener("click", function(event){
-                    event.preventDefault();
-                    var options = self.dropdown.querySelectorAll(".dropdown-inner .dropdown-option");
-                    self.options.walk.call(self.options, "select", options);
-                })
-                a2.innerText = this._e("none");
-                a2.addEventListener("click", function(event){
-                    event.preventDefault();
-                    var options = self.dropdown.querySelectorAll(".dropdown-inner .dropdown-option");
-                    self.options.walk.call(self.options, "unselect", options);
-                })
+                    return btn;
+                }
 
                 // Add Element
                 li = create("SPAN", "dropdown-action");
-                li.appendChild(a1);
-                li.appendChild(a2);
+                li.appendChild(createButton("tail-all", "all", "select"));
+                li.appendChild(createButton("tail-none", "none", "unselect"));
+
                 root.insertBefore(li, root.children[0]);
             }
-
             // Add and Return
             var data = this.dropdown.querySelector(".dropdown-inner");
             this.dropdown[(data? "replace": "append") + "Child"](root, data);
             if(cHAS(this.select, "active")){
                 this.calc();
             }
+
             return this.updateCSV().updateLabel();
         },
 
@@ -650,24 +750,24 @@
         cbGroup: function(group, search){
             var ul = create("UL", "dropdown-optgroup"), self = this, a1, a2;
             if(group == "#"){ return ul; }
-            ul.innerHTML = '<li class="optgroup-title"><b>' + group + '</b></li>';
+            var title = create("LI", "optgroup-title"); // TODO: check <b>... and put optgroup-title weigth bold
+            title.textContent = group;
+            // ul.innerHTML = '<li class="tititle"><b>' + group + '</b></li>';
             if(this.con.multiple && this.con.multiLimit == Infinity && this.con.multiSelectAll){
-                a1 = create("BUTTON", "tail-none"), a2 = create("BUTTON", "tail-all");
-                a1.innerText = this._e("none");
-                a1.addEventListener("click", function(event){
-                    event.preventDefault();
-                    var grp = this.parentElement.parentElement.getAttribute("data-group");
-                    self.options.all.call(self.options, "unselect", grp);
-                });
-                a2.innerText = this._e("all");
-                a2.addEventListener("click", function(event){
-                    event.preventDefault();
-                    var grp = this.parentElement.parentElement.getAttribute("data-group");
-                    self.options.all.call(self.options, "select", grp);
-                });
-                ul.children[0].appendChild(a1);
-                ul.children[0].appendChild(a2);
+                var createButton = function(classname, text, state, arg){
+                    var btn = create("BUTTON", classname);
+                    btn.tabIndex = -1;
+                    btn.textContent = text;
+                    btn.addEventListener("click", function(event){
+                        event.preventDefault();
+                        self.options.all(state, arg);
+                    });
+                    return btn;
+                }                
+                title.appendChild(createButton("tail-all", "all", "select", group));
+                title.appendChild(createButton("tail-none", "none", "unselect", group));
             }
+            ul.appendChild(title);
             return ul;
         },
 
@@ -706,6 +806,7 @@
          |  @since  0.5.8 [0.5.0]
          */
         updateLabel: function(label){
+            //TODO: check if it's safe to simply remove all children
             if(this.container == this.label && this.options.selected.length > 0){
                 if(this.label.querySelector(".label-inner")){
                     this.label.removeChild(this.label.querySelector(".label-inner"));
@@ -841,10 +942,23 @@
                 cREM(self.select, "idle");
                 this.dropdown.style.height = "auto";
                 this.dropdown.style.overflow = "visible";
+                this.dropdown.style.maxHeight = ""; // removing maxHeight
+                this.dropdown.tabIndex = 0;                
                 this.label.removeAttribute("style");
-                if(this.con.search && this.con.searchFocus){
-                    this.dropdown.querySelector("input").focus();
-                }
+
+                if(this.con.search){
+                    this.search.input.tabIndex = 0;
+                    if(this.con.searchFocus || this.search.input.value.length){
+                        this.search.input.active = true;
+                        this.search.input.focus();
+                    } else {
+                        this.search.input.active = false;
+                        this.dropdown.focus();
+                    }
+                } else {
+                    this.dropdown.focus();
+                } 
+
                 this.trigger.call(this, "open");
             }, self = this, e = this.dropdown.style;
 
@@ -865,6 +979,9 @@
                 e.cssText = "height:" + e.maxHeight + ";display:block;overflow:hidden;";
                 final.call(this);
             }
+            if(!this.activeOption){
+                self.setActiveOption(self.dropdown.querySelector(".dropdown-option:not(.disabled)"), true);
+            }            
             return this;
         },
 
@@ -876,6 +993,7 @@
             if(!cHAS(this.select, "active") || cHAS(this.select, "idle")){
                 return false;
             }
+            if(animate === void 0) animate = this.con.animate;
             var final = function(){
                 cREM(this.select, "active");
                 cREM(this.select, "idle");
@@ -1337,11 +1455,13 @@
          |  @since  0.5.0 [0.5.0]
          */
         all: function(state, group){
-            var self = this, list = this;
+            var self = this, list;
             if(group in this.items){
                 list = Object.keys(this.items[group]);
             } else if(["unselect", "enable"].indexOf(state) >= 0){
                 list = [].concat((state == "unselect")? this.selected: this.disabled);
+            } else {
+                list = this.element;
             }
             Array.prototype.forEach.call(list, function(item){
                 self.handle.call(self, state, item, group, false);

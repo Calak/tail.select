@@ -509,6 +509,17 @@
                 scrollTimeout = setTimeout(fn, 100);
             });
 
+            window.addEventListener('resize', function(){
+                if (!cHAS(self.select, 'active') || self.con.openAbove === false) return;
+
+                var fn = function() {
+                    scrollTimeout = null;
+                    self.calc();
+                }
+                this.clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(fn, 100);
+            });
+
             // Bind Source Select
             if(!this.con.sourceBind){
                 return true;
@@ -622,41 +633,26 @@
          |  @since  0.5.4 [0.5.0]
          */
         calc: function(){
-            console.log('calc');
-            var clone = this.dropdown.cloneNode(true), height = this.con.height, search = 0,
-                inner = this.dropdown.querySelector(".dropdown-inner");
+            var clone = this.dropdown.cloneNode(true);
+            clone.style.cssText = "padding:0;margin:0;height:auto;min-height:auto;max-height:" + this.con.height + "px;opacity:0;display:block;visibility:hidden;";
+            clone.querySelector(".dropdown-inner").style = "";
 
-            // Calculate Dropdown Height
-            clone = this.dropdown.cloneNode(true);
-            clone.style.cssText = "height:auto;min-height:auto;max-height:none;opacity:0;display:block;visibility:hidden;";
-            
-            clone.style.maxHeight = this.con.height + "px";
-            clone.className += " cloned";
             this.dropdown.parentElement.appendChild(clone);
-
-            console.log('height:' , clone.clientHeight);
-
-            //height = Math.min(height, clone.clientHeight);
-            height = (height > clone.clientHeight)? clone.clientHeight: height;
-
-            if(this.con.search){
-                search = clone.querySelector(".dropdown-search").clientHeight;
-                // search = clone.querySelector(".dropdown-search").offsetHeight;
-            }
+            var height = clone.clientHeight, search = (this.con.search) ? clone.querySelector(".dropdown-search").clientHeight : 0;
             this.dropdown.parentElement.removeChild(clone);
-            // Calculate Viewport
+
             var pos = this.select.getBoundingClientRect(),
-                bottom = w.innerHeight - (pos.top + pos.height),
-                above = this.con.openAbove;
-            if (typeof above !== 'boolean') above = pos.top > bottom && bottom < height + search;
+                bottom = w.innerHeight - pos.top - pos.height,
+                above = (this.con.openAbove === null) ? above = pos.top > bottom && bottom < height + pos.height : this.con.openAbove;
+console.log(pos);
             ((above)?cADD:cREM)(this.select, "open-top");
+            height = Math.min(height,  w.innerHeight - pos.height - 20);
 
-            // if(above) cADD(this.select, "open-top");
-            // else cREM(this.select, "open-top");
-
+            var inner = this.dropdown.querySelector(".dropdown-inner");
             if(inner){
+                console.log(search, height);
                 this.dropdown.style.maxHeight = height + "px";
-                inner.style.maxHeight = (height-search) + "px";
+                inner.style.maxHeight = (height - search) + "px";
             }
             return this;
         },
